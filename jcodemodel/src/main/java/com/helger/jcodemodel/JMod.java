@@ -62,6 +62,10 @@ public final class JMod
   /** Java8 default method indicator */
   public static final int DEFAULT = 0x400;
   public static final int STRICTFP = 0x800;
+  /** Java 17 sealed class/interface modifier */
+  public static final int SEALED = 0x1000;
+  /** Java 17 non-sealed class modifier (for subclasses of sealed types) */
+  public static final int NON_SEALED = 0x2000;
 
   public static final int PRIVATE_FINAL = PRIVATE | FINAL;
   public static final int PUBLIC_STATIC_FINAL = PUBLIC | STATIC | FINAL;

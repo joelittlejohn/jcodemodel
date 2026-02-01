@@ -153,6 +153,11 @@ public class JDefinedClass extends AbstractJClassContainer <JDefinedClass> imple
   private JMethod m_aCompactConstructor;
 
   /**
+   * List of permitted subclasses for sealed types.
+   */
+  private final List <AbstractJClass> m_aPermits = new ArrayList <> ();
+
+  /**
    * Annotations on this variable. Lazily created.
    */
   private List <JAnnotationUse> m_aAnnotations;
@@ -485,6 +490,50 @@ public class JDefinedClass extends AbstractJClassContainer <JDefinedClass> imple
   public boolean isRecord ()
   {
     return getClassType () == EClassType.RECORD;
+  }
+
+  /**
+   * @return <code>true</code> if this is a sealed class or interface.
+   * @since 4.2.0
+   */
+  public boolean isSealed ()
+  {
+    return m_aMods.isSealed ();
+  }
+
+  /**
+   * @return <code>true</code> if this is a non-sealed class (subclass of a sealed type).
+   * @since 4.2.0
+   */
+  public boolean isNonSealed ()
+  {
+    return m_aMods.isNonSealed ();
+  }
+
+  /**
+   * Specify the permitted subclasses for a sealed class or interface.
+   *
+   * @param aClasses
+   *        The classes that are permitted to extend/implement this sealed type.
+   * @return this for chaining
+   * @since 4.2.0
+   */
+  @NonNull
+  public JDefinedClass permits (@NonNull final AbstractJClass... aClasses)
+  {
+    for (final AbstractJClass aClass : aClasses)
+      m_aPermits.add (aClass);
+    return this;
+  }
+
+  /**
+   * @return an unmodifiable list of permitted subclasses.
+   * @since 4.2.0
+   */
+  @NonNull
+  public List <AbstractJClass> permits ()
+  {
+    return Collections.unmodifiableList (m_aPermits);
   }
 
   @Override
@@ -831,12 +880,32 @@ public class JDefinedClass extends AbstractJClassContainer <JDefinedClass> imple
     }
 
     // Add all interfaces
+    boolean bHasInterfaces = false;
     if (!m_aInterfaces.isEmpty ())
     {
+      bHasInterfaces = true;
       if (!bHasSuperClass)
         f.newline ();
       f.indent ().print (isInterface () ? "extends" : "implements");
       f.generable (m_aInterfaces);
+      f.newline ().outdent ();
+    }
+
+    // Add permits clause for sealed types
+    if (!m_aPermits.isEmpty ())
+    {
+      if (!bHasSuperClass && !bHasInterfaces)
+        f.newline ();
+      f.indent ().print ("permits");
+      boolean bFirst = true;
+      for (final AbstractJClass aPermitted : m_aPermits)
+      {
+        if (bFirst)
+          bFirst = false;
+        else
+          f.print (',');
+        f.generable (aPermitted);
+      }
       f.newline ().outdent ();
     }
 

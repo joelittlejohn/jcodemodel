@@ -76,8 +76,10 @@ public class JMods implements IJGenerable
                                    JMod.PROTECTED |
                                    JMod.STATIC |
                                    JMod.FINAL |
-                                   JMod.ABSTRACT;
-  private static final int INTERFACE = JMod.PUBLIC | JMod.PRIVATE | JMod.PROTECTED;
+                                   JMod.ABSTRACT |
+                                   JMod.SEALED |
+                                   JMod.NON_SEALED;
+  private static final int INTERFACE = JMod.PUBLIC | JMod.PRIVATE | JMod.PROTECTED | JMod.SEALED;
 
   /** bit-packed representation of modifiers. */
   private int m_nMods;
@@ -211,6 +213,22 @@ public class JMods implements IJGenerable
   }
 
   /**
+   * @return <code>true</code> if this is a Java 17 sealed class/interface.
+   */
+  public boolean isSealed ()
+  {
+    return (m_nMods & JMod.SEALED) != 0;
+  }
+
+  /**
+   * @return <code>true</code> if this is a Java 17 non-sealed class (subclass of sealed type).
+   */
+  public boolean isNonSealed ()
+  {
+    return (m_nMods & JMod.NON_SEALED) != 0;
+  }
+
+  /**
    * @param bNewValue
    *        <code>true</code> if this is a Java8 interface default method, <code>false</code>
    *        otherwise.
@@ -269,6 +287,12 @@ public class JMods implements IJGenerable
     if ((m_nMods & JMod.ABSTRACT) != 0)
       f.print ("abstract");
 
+    if ((m_nMods & JMod.SEALED) != 0)
+      f.print ("sealed");
+
+    if ((m_nMods & JMod.NON_SEALED) != 0)
+      f.print ("non-sealed");
+
     if ((m_nMods & JMod.STATIC) != 0)
       f.print ("static");
 
@@ -312,7 +336,12 @@ public class JMods implements IJGenerable
      * interface
      */
     DEFAULT (JMod.DEFAULT, 0),
-    STRICTFP (JMod.STRICTFP, Modifier.STRICT);
+    STRICTFP (JMod.STRICTFP, Modifier.STRICT),
+    /*
+     * sealed and non-sealed do not exist in the reflect API as constants
+     */
+    SEALED (JMod.SEALED, 0),
+    NON_SEALED (JMod.NON_SEALED, 0);
 
     public final int m_nJMod;
     public final int m_nModifier;
